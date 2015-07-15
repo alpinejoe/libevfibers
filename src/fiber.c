@@ -1733,6 +1733,20 @@ int fbr_cond_wait(FBR_P_ struct fbr_cond_var *cond, struct fbr_mutex *mutex)
 	return_success(0);
 }
 
+int fbr_cond_wait_wto(FBR_P_ struct fbr_cond_var *cond,
+		struct fbr_mutex *mutex, ev_tstamp timeout)
+{
+	struct fbr_ev_cond_var ev;
+
+	if (mutex && fbr_id_isnull(mutex->locked_by))
+		return_error(-1, FBR_EINVAL);
+
+	fbr_ev_cond_var_init(FBR_A_ &ev, cond, mutex);
+	if (fbr_ev_wait_one_wto(FBR_A_ &ev.ev_base, timeout) == -1)
+		fbr_mutex_lock(FBR_A_ mutex);
+	return_success(0);
+}
+
 void fbr_cond_broadcast(FBR_P_ struct fbr_cond_var *cond)
 {
 	struct fbr_id_tailq_i *item;
