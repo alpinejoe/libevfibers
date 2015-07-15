@@ -1153,6 +1153,22 @@ int fbr_connect(FBR_P_ int sockfd, const struct sockaddr *addr,
 int fbr_connect_wto(FBR_P_ int sockfd, const struct sockaddr *addr,
                    socklen_t addrlen, ev_tstamp timeout);
 
+#ifdef HAVE_POLL_H
+/**
+ * Fiber friendly poll wrapper.
+ * @param [in] fds - socket file descriptors to examine
+ * @param [in] nfds - specifies the size of the fds array
+ * @param [in] timeout_ms in milliseconds to wait for events
+ * @return number of descriptors that are ready for I/O on success, -1 in case of error and errno set
+ *
+ * Poll wrapper that examines a set of file descriptors to see if some of them
+ * are ready for I/O or if certain events have occurred on them.
+ *
+ * Possible errno values are described in the poll man page.
+ */
+int fbr_poll(FBR_P_ struct pollfd fds[], nfds_t nfds, int timeout_ms);
+#endif /* HAVE_POLL_H */
+
 /**
  * Fiber friendly libc read wrapper.
  * @param [in] fd file descriptor to read from
@@ -1527,6 +1543,24 @@ void fbr_cond_destroy(FBR_P_ struct fbr_cond_var *cond);
  * @see fbr_cond_signal
  */
 int fbr_cond_wait(FBR_P_ struct fbr_cond_var *cond, struct fbr_mutex *mutex);
+
+/**
+ * Waits timeout number of seconds or until the condition is met.
+ *
+ * Current fiber is suspended until a signal is sent via fbr_cond_signal or
+ * fbr_cond_broadcast to the corresponding conditional variable or
+ * the timer expires.
+ *
+ * A mutex must be acquired by the calling fiber prior to waiting for a
+ * condition. Internally mutex is released and reacquired again before
+ * returning. Upon successful return calling fiber will hold the mutex.
+ *
+ * @see fbr_cond_init
+ * @see fbr_cond_destroy
+ * @see fbr_cond_broadcast
+ * @see fbr_cond_signal
+ */
+int fbr_cond_wait_wto(FBR_P_ struct fbr_cond_var *cond, struct fbr_mutex *mutex, ev_tstamp timeout);
 
 /**
  * Broadcasts a signal to all fibers waiting for condition.
