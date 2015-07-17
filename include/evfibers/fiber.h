@@ -137,6 +137,8 @@
  * @file evfibers/fiber.h
  * This file contains all client-visible API functions for working with fibers.
  */
+#include <evfibers/config.h>
+
 #include <unistd.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -150,8 +152,6 @@
 #endif
 #include <assert.h>
 #include <ev.h>
-
-#include <evfibers/config.h>
 
 /**
  * Maximum allowed level of fbr_transfer nesting within fibers.
