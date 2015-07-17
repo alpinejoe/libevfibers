@@ -913,6 +913,45 @@ int fbr_connect_wto(FBR_P_ int sockfd, const struct sockaddr *addr,
 	return r;
 }
 
+#ifdef HAVE_POLL_H
+int fbr_poll(FBR_P_ struct pollfd fds[], nfds_t nfds, int timeout_ms)
+{
+	nfds_t i;
+	ev_io io[nfds];
+	struct fbr_ev_base *events[nfds+1];
+	struct fbr_ev_watcher watcher[nfds];
+	struct fbr_destructor dtor[nfds];
+
+	if (timeout_ms != 0) {
+		for (i = 0; i < nfds; ++i) {
+			ev_io_init(&io[i], NULL, fds[i].fd,
+			  (fds[i].events & POLLIN ? EV_READ : 0) |
+			  (fds[i].events & POLLOUT ? EV_WRITE : 0));
+			ev_io_start(fctx->__p->loop, &io[i]);
+
+			fbr_ev_watcher_init(FBR_A_ &watcher[i],
+				(struct ev_watcher *)&io[i]);
+			events[i] = &watcher[i].ev_base;
+
+			dtor[i].func = watcher_io_dtor;
+			dtor[i].arg = &io[i];
+			dtor[i].active = 0;
+			fbr_destructor_add(FBR_A_ &dtor[i]);
+		}
+		events[i] = NULL;
+
+		if (timeout_ms > 0)
+			fbr_ev_wait_to(FBR_A_ events, timeout_ms/1000.0);
+		else
+			fbr_ev_wait(FBR_A_ events);
+
+		for (i = 0; i < nfds; ++i) {
+			fbr_destructor_remove(FBR_A_ &dtor[i], 1);
+		}
+	}
+	return poll(fds, nfds, 0); /* Non-blocking when timeout is 0. */
+}
+#endif /* HAVE_POLL_H */
 
 ssize_t fbr_read(FBR_P_ int fd, void *buf, size_t count)
 {
@@ -1688,6 +1727,20 @@ int fbr_cond_wait(FBR_P_ struct fbr_cond_var *cond, struct fbr_mutex *mutex)
 
 	fbr_ev_cond_var_init(FBR_A_ &ev, cond, mutex);
 	fbr_ev_wait_one(FBR_A_ &ev.ev_base);
+	return_success(0);
+}
+
+int fbr_cond_wait_wto(FBR_P_ struct fbr_cond_var *cond,
+		struct fbr_mutex *mutex, ev_tstamp timeout)
+{
+	struct fbr_ev_cond_var ev;
+
+	if (mutex && fbr_id_isnull(mutex->locked_by))
+		return_error(-1, FBR_EINVAL);
+
+	fbr_ev_cond_var_init(FBR_A_ &ev, cond, mutex);
+	if (fbr_ev_wait_one_wto(FBR_A_ &ev.ev_base, timeout) == -1)
+		fbr_mutex_lock(FBR_A_ mutex);
 	return_success(0);
 }
 

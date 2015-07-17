@@ -77,6 +77,8 @@ if(WANT_VALGRIND)
 	endif(NOT HAVE_VALGRIND_H)
 endif(WANT_VALGRIND)
 
+check_include_files(poll.h HAVE_POLL_H)
+
 include_directories(
 	"${CMAKE_CURRENT_SOURCE_DIR}/include"
 	"${CMAKE_CURRENT_BINARY_DIR}/include"
