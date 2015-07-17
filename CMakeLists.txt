@@ -105,7 +105,8 @@ set_target_properties(evfibers
 target_link_libraries(evfibers
 	${LIBEV_LIBRARY}
 	${LIBEIO_LIBRARY}
-	${CMAKE_THREAD_LIBS_INIT})
+	${CMAKE_THREAD_LIBS_INIT}
+	-ldl)
 if(WANT_EIO AND WANT_EMBEDDED_EIO)
 	add_dependencies(evfibers libeio)
 endif(WANT_EIO AND WANT_EMBEDDED_EIO)

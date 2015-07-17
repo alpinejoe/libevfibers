@@ -39,6 +39,7 @@
 #include <evfibers/eio.h>
 #endif
 #include <evfibers_private/fiber.h>
+#include <evfibers_private/syscalls.h>
 
 #ifndef LIST_FOREACH_SAFE
 #define LIST_FOREACH_SAFE(var, head, field, next_var)              \
