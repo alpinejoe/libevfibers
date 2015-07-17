@@ -34,9 +34,6 @@
 #define RUNNING_ON_VALGRIND (0)
 #define VALGRIND_STACK_REGISTER(a,b) (void)0
 #endif
-#ifdef HAVE_POLL_H
-#include <poll.h>
-#endif
 
 #ifdef FBR_EIO_ENABLED
 #include <evfibers/eio.h>

@@ -145,6 +145,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/queue.h>
+#ifdef HAVE_POLL_H
+#include <poll.h>
+#endif
 #include <assert.h>
 #include <ev.h>
 
